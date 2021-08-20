@@ -1,4 +1,4 @@
-name: rialmsRDP
+name: TESTRDP1
 
 on: [push, workflow_dispatch]
 
