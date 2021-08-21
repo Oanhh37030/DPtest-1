@@ -1,0 +1,37 @@
+name: RDP3
+
+on: 
+  workflow_dispatch:
+    inputs:
+      authcode:
+        description: 'Ngrog Token'
+        required: true
+      loca:
+        description: 'Ngrog region: us - eu - ap - au - sa - jp - in '
+        required: true
+        default: 'eu'
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Download
+      run: Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+    - name: Extract
+      run: Expand-Archive ngrok.zip
+    - name: Auth
+      run: .\ngrok\ngrok.exe authtoken ${{ github.event.inputs.authcode }}
+      env:
+        NGROK_AUTH_TOKEN: ${{ github.event.inputs.authcode }}
+    - name: Enable TS
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+    - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+    - run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd8564!@#" -Force)
+    - name: Install google backup and sync
+      run: choco install google-backup-and-sync
+    - name: Install psiphon
+      run: choco install psiphon
+    - name: Create Tunnel
+      run: .\ngrok\ngrok.exe tcp -region ${{ github.event.inputs.loca }} 3389
